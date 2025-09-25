@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAccount, useConnect, useDisconnect, useWalletClient, useSwitchChain, usePublicClient } from 'wagmi'
+import { useAccount, useConnect, useDisconnect, useWalletClient, usePublicClient, useSwitchChain } from 'wagmi'
 import { parseAbi, encodeFunctionData, parseEther } from 'viem'
 import contractsConfig from '../contractsConfig.js'
 import { baseSepoliaChain } from '../lib/wagmi'
@@ -11,7 +11,7 @@ export default function HomePage() {
   const { connect, connectors } = useConnect()
   const { disconnect } = useDisconnect()
   const { data: walletClient } = useWalletClient()
-  const { data: publicClient } = usePublicClient()
+  const publicClient = usePublicClient()
   const { switchChain } = useSwitchChain()
 
   const [selectedContract, setSelectedContract] = useState('')
@@ -75,7 +75,7 @@ export default function HomePage() {
   }
 
   const deployContract = async () => {
-    if (!walletClient || !publicClient || !selectedContractData) return
+    if (!walletClient || !selectedContractData || !publicClient) return
 
     try {
       setIsDeploying(true)
@@ -106,7 +106,7 @@ export default function HomePage() {
         return value
       })
 
-      // Deploy the contract using viem's deployContract
+      // Deploy the contract
       const hash = await walletClient.deployContract({
         abi: selectedContractData.abi,
         bytecode: selectedContractData.bytecode,
@@ -116,7 +116,7 @@ export default function HomePage() {
       // Wait for transaction receipt using publicClient
       const receipt = await publicClient.waitForTransactionReceipt({ 
         hash,
-        confirmations: 1
+        timeout: 60000 // 60 second timeout
       })
 
       setDeployResult({
@@ -143,11 +143,11 @@ export default function HomePage() {
           key={name}
           value={value.toString()}
           onChange={(e) => handleArgChange(name, e.target.value, type)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
         >
-          <option value="">Select...</option>
-          <option value="true">true</option>
-          <option value="false">false</option>
+          <option value="" className="text-gray-500">Select...</option>
+          <option value="true" className="text-gray-900">true</option>
+          <option value="false" className="text-gray-900">false</option>
         </select>
       )
     }
@@ -158,8 +158,8 @@ export default function HomePage() {
         type="text"
         value={value}
         onChange={(e) => handleArgChange(name, e.target.value, type)}
-        placeholder={`Enter ${type} value`}
-        className="w-full px-4 py-3 text-gray-800 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+        placeholder={`Enter ${type}`}
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-400"
       />
     )
   }
@@ -220,47 +220,35 @@ export default function HomePage() {
           {/* Contract Selection */}
           {isConnected && (
             <>
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
-                <label className="block text-lg font-semibold text-gray-800 mb-3">
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select Contract to Deploy
                 </label>
                 <select
                   value={selectedContract}
                   onChange={(e) => setSelectedContract(e.target.value)}
-                  className="w-full px-4 py-3 text-gray-800 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 >
                   <option value="" className="text-gray-500">Choose a contract...</option>
                   {contractsConfig.map((contract) => (
-                    <option key={contract.id} value={contract.id} className="text-gray-800 font-medium">
+                    <option key={contract.id} value={contract.id} className="text-gray-900">
                       {contract.name} - {contract.description}
                     </option>
                   ))}
                 </select>
-                {selectedContract && (
-                  <div className="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
-                    <p className="text-blue-800 font-medium">
-                      Selected: {contractsConfig.find(c => c.id.toString() === selectedContract)?.name}
-                    </p>
-                    <p className="text-blue-600 text-sm mt-1">
-                      {contractsConfig.find(c => c.id.toString() === selectedContract)?.description}
-                    </p>
-                  </div>
-                )}
               </div>
 
               {/* Constructor Arguments */}
               {selectedContract && constructorInputs.length > 0 && (
-                <div className="mb-6 p-6 bg-yellow-50 rounded-lg border-2 border-yellow-200">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                    <span className="bg-yellow-500 text-white px-3 py-1 rounded-full text-sm mr-3">Required</span>
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-800 mb-4">
                     Constructor Parameters
                   </h3>
                   <div className="space-y-4">
                     {constructorInputs.map((input) => (
-                      <div key={input.name} className="bg-white p-4 rounded-md border">
-                        <label className="block text-base font-semibold text-gray-800 mb-2">
-                          {input.name} 
-                          <span className="text-blue-600 font-normal ml-2">({input.type})</span>
+                      <div key={input.name}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {input.name} ({input.type})
                         </label>
                         {renderInputField(input)}
                       </div>
@@ -272,41 +260,20 @@ export default function HomePage() {
               {/* Deploy Button */}
               {selectedContract && (
                 <div className="mb-6">
-                  <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-lg border-2 border-green-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-bold text-green-800">Ready to Deploy</h3>
-                        <p className="text-green-700 text-sm">
-                          Contract: {contractsConfig.find(c => c.id.toString() === selectedContract)?.name}
-                        </p>
-                      </div>
-                      {!isOnCorrectNetwork && (
-                        <div className="bg-red-100 px-3 py-1 rounded-full">
-                          <span className="text-red-700 text-sm font-medium">Wrong Network</span>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={deployContract}
-                      disabled={isDeploying || !isOnCorrectNetwork}
-                      className={`w-full px-6 py-4 font-bold text-lg rounded-lg transition duration-200 ${
-                        isDeploying || !isOnCorrectNetwork
-                          ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                          : 'bg-green-600 text-white hover:bg-green-700 transform hover:scale-105'
-                      }`}
-                    >
-                      {isDeploying ? (
-                        <span className="flex items-center justify-center">
-                          <div className="loading-spinner mr-3"></div>
-                          Deploying Contract...
-                        </span>
-                      ) : !isOnCorrectNetwork ? (
-                        'Switch to Base Sepolia Network'
-                      ) : (
-                        'Deploy Contract'
-                      )}
-                    </button>
-                  </div>
+                  <button
+                    onClick={deployContract}
+                    disabled={isDeploying || !isOnCorrectNetwork}
+                    className="w-full px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
+                  >
+                    {isDeploying ? (
+                      <span className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Deploying...
+                      </span>
+                    ) : (
+                      'Deploy Contract'
+                    )}
+                  </button>
                 </div>
               )}
 
@@ -355,6 +322,16 @@ export default function HomePage() {
           )}
         </div>
       </div>
+
+      {/* Add CSS for loading spinner */}
+      <style jsx>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+      `}</style>
     </div>
   )
 }
