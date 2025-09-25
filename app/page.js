@@ -292,16 +292,16 @@ export default function HomePage() {
                   <h3 className="text-lg font-medium text-green-800 mb-4">
                     🎉 Contract Deployed Successfully!
                   </h3>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-sm text-green-800">
                     <p>
                       <strong>Contract Address:</strong>{' '}
-                      <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                      <code className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-800">
                         {deployResult.contractAddress}
                       </code>
                     </p>
                     <p>
                       <strong>Transaction Hash:</strong>{' '}
-                      <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                      <code className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-800">
                         {deployResult.transactionHash}
                       </code>
                     </p>
