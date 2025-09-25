@@ -321,6 +321,15 @@ export default function HomePage() {
             </>
           )}
         </div>
+        
+        {/* Credit Section */}
+        <div className="text-center mt-6">
+          <p className="text-sm text-gray-500">
+            Credit to: <a href="https://kasih-7.blogspot.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              https://kasih-7.blogspot.com/
+            </a>
+          </p>
+        </div>
       </div>
 
       {/* Add CSS for loading spinner */}
