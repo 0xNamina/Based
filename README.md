@@ -88,10 +88,6 @@ Setup:
 - Register [Basename](https://base.org/names)
 - Track progress di [builderscore.xyz](https://builderscore.xyz/)
 
-## 📄 License
-
-MIT License
-
 ---
 
 **Auto-complete your Base journey! 🔵**
